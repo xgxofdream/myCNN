@@ -9,3 +9,8 @@ Codes for learning CNN
 4. 调试CNN参数
 5. 比较CNN模型
 6. 预测
+
+
+感谢他们的代码：
+
+YIYIMZ，seathiefwang，想吃西红柿的番茄，和其他网友，以及Google Colab。
