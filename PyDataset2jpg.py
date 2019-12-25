@@ -17,12 +17,13 @@ def unpickle(file):
     with open(file, 'rb') as fo:
         dict = pickle.load(fo, encoding='bytes')
     return dict
-# Read original CIFAR-10 dataset saved in a folder
+
 filename = './cifar-10'
 
 meta = unpickle(filename+'/batches.meta')
 label_name = meta[b'label_names']
 
+# extract train imgs
 for i in range(1,6):
     content = unpickle(filename+'/data_batch_'+str(i))
     print('load data...')
@@ -32,9 +33,23 @@ for i in range(1,6):
         img = content[b'data'][j]
         img = img.reshape(3,32,32)
         img = img.transpose(1,2,0)
-        # Note: create a folder 'train' in the same folder
         img_path = 'train/' + label_name[content[b'labels'][j]].decode()
         img_name = 'train/'+label_name[content[b'labels'][j]].decode() + '/batch_' + str(i) + '_num_' + str(j) +'.jpg'
         if not os.path.isdir(img_path):
             os.makedirs(img_path)
         imageio.imwrite(img_name,img)
+        
+# extract test imgs        
+content = unpickle(filename+'/test_batch')
+print('load data...')
+print(content.keys())
+print('tranfering data_batch')
+for j in range(1000):
+    img = content[b'data'][j]
+    img = img.reshape(3,32,32)
+    img = img.transpose(1,2,0)
+    img_path = 'test/' + label_name[content[b'labels'][j]].decode()
+    img_name = 'test/'+label_name[content[b'labels'][j]].decode() + '/batch_' + '_num_' + str(j) +'.jpg'
+    if not os.path.isdir(img_path):
+        os.makedirs(img_path)
+    imageio.imwrite(img_name,img)
