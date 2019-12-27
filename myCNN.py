@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
+# 第1种偶联数据集合和算法模型的方法
 """
+Created @author: yy
+
 Modified on Wed Dec 24 10:24:47 2019
 
 @author: liujie
@@ -7,18 +10,32 @@ Modified on Wed Dec 24 10:24:47 2019
 """
 import cv2
 import os
+import keras
 import numpy as np
 import matplotlib.pyplot as plt
 from tensorflow.keras import layers, models
 
+#--------------------------------------基本参数配置-----------------------------
 IMAGE_SIZE = 32
-train_dir = "./data/train"
-test_dir = "./data/test"
+Channel = 3
+train_dir = "./data/train/"
+test_dir = "./data/test/"
+#图片类别为10
+num_classes = 10
 
-#读取训练数据
+#模型保存地址
+save_dir = os.path.join(os.getcwd(), 'saved_models')
+model_name = 'keras_cifar10_trained_model.h5'
+
+#迭代次数
+epoch_num = 1
+
+#初始化
 images = []
 labels = []
 
+#--------------------------------------函数定义-----------------------------
+#函数方法：读取图片,仅支持级文件夹（因为递归调用本方法）
 def read_path(data_path):    
     for dir_item in os.listdir(data_path):
         #从初始路径开始叠加，合并成可识别的操作路径
@@ -48,7 +65,7 @@ def read_path(data_path):
     return images,labels
     
 
-#从指定路径读取训练数据
+#函数方法：从指定路径读取训练数据
 def load_dataset(data_path):
     images,labels = read_path(data_path)    
 
@@ -57,17 +74,30 @@ def load_dataset(data_path):
    
     return images, labels                                
                     
-
-
+#--------------------------------------读入数据集-----------------------------
+#导入数据到训练变量x_test, y_test，x_train, y_train
 x_test, y_test = load_dataset(test_dir)
 x_train, y_train = load_dataset(train_dir)
 
+#归一化数据（可以不要）
+x_train = x_train.astype('float32')
+x_test = x_test.astype('float32')
+x_train /= 255
+x_test /= 255
 
+'''
+# 将label转化成2进制值（可以不要）
+# Convert class vectors to binary class matrices.
+# 但是进入训练进程后，会报错：
+# Can not squeeze dim[1], expected a dimension of 1, got 10 for 'metrics/accuracy/Squeeze' (op: 'Squeeze') with input shapes: [?,10].
+y_train = keras.utils.to_categorical(y_train, num_classes)
+y_test = keras.utils.to_categorical(y_test, num_classes)
+'''
+#验证数据集信息
 print("Train data: ", x_train.shape)
 print("Train labels: ", y_train.shape) 
 print("Test data: ", x_test.shape)
 print("Test labels: ", y_test.shape)
-
 
 
 plt.figure(figsize=(10,10))
@@ -77,13 +107,11 @@ for i in range(9):
         plt.yticks([])
         plt.grid(False)
         plt.imshow(x_train[i], cmap=plt.cm.binary)
-        # The CIFAR labels happen to be arrays, 
-        # which is why you need the extra index
 
 plt.show()
 
 
-
+#--------------------------------------Keras网络配置-----------------------------
 # the following code is from 
 # https://colab.research.google.com/github/tensorflow/docs/blob/master/site/en/tutorials/images/cnn.ipynb#scrollTo=0LvwaKhtUdOo
 # it is based on Keras directly, not using tensorflow as backend    
@@ -103,10 +131,21 @@ model.summary()
 model.compile(optimizer='adam',
     loss='sparse_categorical_crossentropy',
     metrics=['accuracy'])
-# 迭代10次 epochs=10
-history = model.fit(x_train, y_train, epochs=10, 
+
+#--------------------------------------训练模型-----------------------------
+# 迭代
+history = model.fit(x_train, y_train, epochs=epoch_num, 
                     validation_data=(x_test, y_test))
 
+#--------------------------------------保存模型-----------------------------
+# Save model and weights
+if not os.path.isdir(save_dir):
+    os.makedirs(save_dir)
+model_path = os.path.join(save_dir, model_name)
+model.save(model_path)
+print('Saved trained model at %s ' % model_path)
+
+#--------------------------------------模型性能display-----------------------------
 
 plt.plot(history.history['accuracy'], label='accuracy')
 plt.plot(history.history['val_accuracy'], label = 'val_accuracy')
@@ -115,10 +154,6 @@ plt.ylabel('Accuracy')
 plt.ylim([0.2, 1.0])
 plt.legend(loc='lower right')
 
-
-
     
 test_loss, test_acc = model.evaluate(x_test,  y_test, verbose=2)
 print(test_acc)
-
-''''''
