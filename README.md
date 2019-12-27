@@ -13,7 +13,7 @@ Codes for learning CNN
 
 #---------------
 
-4. 调试CNN参数，训练模型
+3. 调试CNN参数，训练模型
 
 
 
